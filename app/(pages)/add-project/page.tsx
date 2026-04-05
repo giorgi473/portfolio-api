@@ -7,8 +7,7 @@ import { cn } from "@/lib/utils"
 export default function AddProjectPage() {
   return (
     <div className="min-h-screen bg-background py-16 pb-32 px-4 selection:bg-primary/20">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(120,119,198,0.1),rgba(255,255,255,0))] pointer-events-none" />
-      <div className="container mx-auto max-w-3xl relative">
+      <div className="container mx-auto max-w-4xl relative">
         <div className="mb-12 flex items-center justify-between">
           <Link
             href="/"
@@ -25,7 +24,6 @@ export default function AddProjectPage() {
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">New Submission</span>
           </div>
         </div>
-
         <AddProjectForm />
       </div>
     </div>

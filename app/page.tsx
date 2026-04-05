@@ -8,6 +8,8 @@ import { Suspense } from "react";
 import { Code2, Server, Database, Globe, Plus } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import BackgroundCirclesDemo from "@/components/ui/circles";
+import MeteorsDemo from "@/components/ui/meteors";
 
 async function ProjectList() {
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -61,9 +63,8 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-background selection:bg-primary/20">
       {/* Hero Section */}
-      <section className="relative py-24 md:py-32 overflow-hidden border-b border-border/40">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.15),rgba(255,255,255,0))]" />
-        <div className="absolute inset-0 bg-grid-slate-900/[0.02] bg-position-[bottom_left_-20px] mask-[linear-gradient(to_bottom,white,transparent)]" />
+      <section className="relative py-24 md:py-36 overflow-hidden border-b border-border/40">
+        <BackgroundCirclesDemo />
         <div className="container mx-auto px-4 max-w-6xl relative">
           <div className="flex flex-col items-center text-center space-y-8">
             <div>
@@ -100,39 +101,40 @@ export default function HomePage() {
       </section>
 
       {/* Projects Section */}
-      <section className="py-24 container mx-auto px-4 max-w-6xl relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(120,119,198,0.05),rgba(255,255,255,0))] pointer-events-none" />
-
-        <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-8 mb-16 relative">
-          <div className="space-y-3 text-center md:text-left">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight">Featured Projects</h2>
-            <p className="text-muted-foreground text-lg font-medium">Showcasing the intersection of design and functionality.</p>
+      <div className="relative">
+        {/* <BackgroundGradientDemo /> */}
+        <MeteorsDemo />
+        <section className="py-24 container mx-auto px-4 max-w-6xl">
+          <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-8 mb-16 relative">
+            <div className="space-y-3 text-center md:text-left">
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight">Featured Projects</h2>
+              <p className="text-muted-foreground text-lg font-medium">Showcasing the intersection of design and functionality.</p>
+            </div>
+            <div>
+              <Link
+                href="/add-project"
+                className={cn(
+                  buttonVariants(),
+                  "rounded-full h-14 px-8 font-bold uppercase tracking-widest text-xs group transition-all duration-300 hover:scale-105 active:scale-95"
+                )}
+              >
+                <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+                Add New Project
+              </Link>
+            </div>
           </div>
 
-          <div>
-            <Link
-              href="/add-project"
-              className={cn(
-                buttonVariants(),
-                "rounded-full h-14 px-8 font-bold uppercase tracking-widest text-xs group transition-all duration-300 hover:scale-105 active:scale-95"
-              )}
-            >
-              <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
-              Add New Project
-            </Link>
-          </div>
-        </div>
-
-        <Suspense fallback={
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <ProjectSkeleton />
-            <ProjectSkeleton />
-            <ProjectSkeleton />
-          </div>
-        }>
-          <ProjectList />
-        </Suspense>
-      </section>
+          <Suspense fallback={
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              <ProjectSkeleton />
+              <ProjectSkeleton />
+              <ProjectSkeleton />
+            </div>
+          }>
+            <ProjectList />
+          </Suspense>
+        </section>
+      </div>
     </main>
   );
 }
