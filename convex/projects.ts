@@ -1,35 +1,66 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-/**
- * პროექტების სიის წამოღება
- */
 export const list = query({
   args: {
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let q = ctx.db.query("projects").order("desc");
-    if (args.limit) {
-      return await q.take(args.limit);
-    }
-    return await q.collect();
+    let q = ctx.db.query("projects").withIndex("by_featured");
+    const projects = args.limit 
+      ? await q.order("desc").take(args.limit) 
+      : await q.order("desc").collect();
+
+    return await Promise.all(
+      projects.map(async (project) => {
+        if (!project.images) return { ...project, images: [] };
+
+        const imageUrls = await Promise.all(
+          project.images.map(async (img) => {
+            if (img.startsWith("http")) return img;
+            try {
+              return await ctx.storage.getUrl(img);
+            } catch (e) {
+              return null;
+            }
+          })
+        );
+
+        return {
+          ...project,
+          images: imageUrls.filter((url): url is string => url !== null),
+        };
+      })
+    );
   },
 });
 
-/**
- * კონკრეტული პროექტის წამოღება ID-ით
- */
 export const getById = query({
   args: { id: v.id("projects") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const project = await ctx.db.get(args.id);
+    if (!project) return null;
+
+    if (!project.images) return { ...project, images: [] };
+
+    const imageUrls = await Promise.all(
+      project.images.map(async (img) => {
+        if (img.startsWith("http")) return img;
+        try {
+          return await ctx.storage.getUrl(img);
+        } catch (e) {
+          return null;
+        }
+      })
+    );
+
+    return {
+      ...project,
+      images: imageUrls.filter((url): url is string => url !== null),
+    };
   },
 });
 
-/**
- * ახალი პროექტის დამატება
- */
 export const create = mutation({
   args: {
     title: v.string(),
@@ -38,15 +69,31 @@ export const create = mutation({
     liveUrl: v.optional(v.string()),
     codeUrl: v.optional(v.string()),
     featured: v.optional(v.boolean()),
+    images: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("projects", args);
   },
 });
 
-/**
- * პროექტის წაშლა
- */
+export const update = mutation({
+  args: {
+    id: v.id("projects"),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    badge: v.optional(v.string()),
+    liveUrl: v.optional(v.string()),
+    codeUrl: v.optional(v.string()),
+    featured: v.optional(v.boolean()),
+    images: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...updates } = args;
+    await ctx.db.patch(id, updates);
+    return id;
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id("projects") },
   handler: async (ctx, args) => {
@@ -54,9 +101,6 @@ export const remove = mutation({
   },
 });
 
-/**
- * საწყისი მონაცემების დამატება (Seeding)
- */
 export const seedProjects = mutation({
   args: {},
   handler: async (ctx) => {

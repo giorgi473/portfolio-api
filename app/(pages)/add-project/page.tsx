@@ -1,7 +1,7 @@
-import { AddProjectForm } from "@/components/add-project-form"
+import Link from "next/link"
+import { ProjectForm } from "@/features/projects/components/form/project-form";
 import { buttonVariants } from "@/components/ui/button-variants"
 import { ChevronLeft } from "lucide-react"
-import Link from "next/link"
 import { cn } from "@/lib/utils"
 
 export default function AddProjectPage() {
@@ -24,8 +24,8 @@ export default function AddProjectPage() {
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">New Submission</span>
           </div>
         </div>
-        <AddProjectForm />
+        <ProjectForm />
       </div>
     </div>
-  )
+  );
 }

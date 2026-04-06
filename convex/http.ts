@@ -4,22 +4,18 @@ import { api } from "./_generated/api";
 
 const http = httpRouter();
 
-/**
- * JSON პასუხის დამხმარე ფუნქცია CORS-ით
- */
 const jsonResponse = (data: any, status = 200) => {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS, DELETE",
+      "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS, DELETE",
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
 };
 
-// OPTIONS მოთხოვნების დამუშავება CORS-ისთვის
 http.route({
   pathPrefix: "/",
   method: "OPTIONS",
@@ -28,14 +24,13 @@ http.route({
       status: 204,
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS, DELETE",
+        "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS, DELETE",
         "Access-Control-Allow-Headers": "Content-Type",
       },
     });
   }),
 });
 
-// GET /projects - პროექტების სია
 http.route({
   path: "/projects",
   method: "GET",
@@ -54,7 +49,6 @@ http.route({
   }),
 });
 
-// POST /projects - ახალი პროექტის შექმნა ან Seeding
 http.route({
   path: "/projects",
   method: "POST",
@@ -62,13 +56,10 @@ http.route({
     try {
       const body = await request.json();
       
-      // თუ მოთხოვნა არის Seeding-ისთვის
       if (body.action === "seed") {
         const result = await ctx.runMutation(api.projects.seedProjects);
         return jsonResponse(result, 201);
       }
-
-      // ახალი პროექტის შექმნა
       const id = await ctx.runMutation(api.projects.create, body);
       return jsonResponse({ id }, 201);
     } catch (error) {
@@ -77,7 +68,26 @@ http.route({
   }),
 });
 
-// DELETE /projects/:id - პროექტის წაშლა
+http.route({
+  pathPrefix: "/projects/",
+  method: "PATCH",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const id = request.url.split("/").pop();
+      if (!id) return jsonResponse({ error: "ID required" }, 400);
+      
+      const body = await request.json();
+      await ctx.runMutation(api.projects.update, { 
+        id: id as any,
+        ...body 
+      });
+      return jsonResponse({ success: true });
+    } catch (error) {
+      return jsonResponse({ error: "Failed to update project" }, 500);
+    }
+  }),
+});
+
 http.route({
   pathPrefix: "/projects/",
   method: "DELETE",
@@ -90,6 +100,24 @@ http.route({
       return jsonResponse({ success: true });
     } catch (error) {
       return jsonResponse({ error: "Failed to delete project" }, 500);
+    }
+  }),
+});
+
+http.route({
+  pathPrefix: "/projects/",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const id = request.url.split("/").pop();
+      if (!id || id === "projects") return jsonResponse({ error: "ID required" }, 400);
+      
+      const project = await ctx.runQuery(api.projects.getById, { id: id as any });
+      if (!project) return jsonResponse({ error: "Project not found" }, 404);
+      
+      return jsonResponse(project);
+    } catch (error) {
+      return jsonResponse({ error: "Failed to fetch project" }, 500);
     }
   }),
 });

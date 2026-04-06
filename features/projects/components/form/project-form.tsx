@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ConvexHttpClient } from "convex/browser"
-import { api } from "@/convex/_generated/api"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Controller, useForm, type SubmitHandler } from "react-hook-form"
-import { toast, Toaster } from "sonner"
-import * as z from "zod"
-import { Loader2, X, Layout, FileText, Code2, BadgeCheck, ExternalLink } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { toast, Toaster } from "sonner";
+import * as z from "zod";
+import { Loader2, X, Layout, FileText, Code2, BadgeCheck, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,22 +18,23 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupText,
   InputGroupTextarea,
-} from "@/components/ui/input-group"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@/components/ui/input-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ImageUpload, type SelectedImage } from "./image-upload";
 
 const projectSchema = z.object({
   title: z
@@ -48,65 +49,115 @@ const projectSchema = z.object({
   liveUrl: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
   codeUrl: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
   featured: z.boolean(),
-})
+  images: z.array(z.string()).optional(),
+});
 
-type ProjectFormValues = z.infer<typeof projectSchema>
+export type ProjectFormValues = z.infer<typeof projectSchema>;
 
-export function AddProjectForm() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
+interface ProjectFormProps {
+  initialData?: ProjectFormValues & { _id: string };
+  isEdit?: boolean;
+}
+
+export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>(
+    initialData?.images?.map((url) => ({ preview: url, isExisting: true })) || []
+  );
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       title: "",
       description: "",
       badge: "Live Demo",
       liveUrl: "",
       codeUrl: "",
       featured: false,
+      images: [],
     },
-  })
+  });
 
-  const onSubmit: SubmitHandler<ProjectFormValues> = async (data) => {
-    setLoading(true)
+  const onSubmit = async (data: ProjectFormValues) => {
+    if (loading) return;
+    setLoading(true);
     try {
-      const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
+      const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+      if (!convexUrl) throw new Error("NEXT_PUBLIC_CONVEX_URL is not defined");
+      const convex = new ConvexHttpClient(convexUrl);
 
-      // Clean data before sending
+      const imageUrls: string[] = [];
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+      for (const img of selectedImages) {
+        if (img.isExisting) {
+          imageUrls.push(img.preview);
+          continue;
+        }
+
+        if (img.file) {
+          if (!cloudName || !uploadPreset || uploadPreset === "your_upload_preset") {
+            throw new Error("Cloudinary config missing");
+          }
+
+          const formData = new FormData();
+          formData.append("file", img.file);
+          formData.append("upload_preset", uploadPreset);
+          const result = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+            method: "POST",
+            body: formData,
+          });
+          if (!result.ok) throw new Error("Upload failed");
+          const response = await result.json();
+          imageUrls.push(response.secure_url);
+        }
+      }
+
       const submissionData = {
         ...data,
         liveUrl: data.liveUrl || undefined,
         codeUrl: data.codeUrl || undefined,
+        images: imageUrls.length > 0 ? imageUrls : undefined,
+      };
+
+      if (isEdit && initialData?._id) {
+        await convex.mutation(api.projects.update, {
+          id: initialData._id as any,
+          ...submissionData,
+        });
+        toast.success("Project updated!");
+      } else {
+        await convex.mutation(api.projects.create, submissionData);
+        toast.success("Project created!");
       }
 
-      await convex.mutation(api.projects.create, submissionData)
-
-      toast.success("Project created successfully!", {
-        description: "Your new project is now visible on the portfolio.",
-        position: "bottom-right",
-      })
-
-      form.reset()
-      router.push("/")
-      router.refresh()
-    } catch (error) {
-      console.error("Failed to create project", error)
-      toast.error("Failed to create project. Please try again.")
+      form.reset();
+      setSelectedImages([]);
+      router.push("/");
+      router.refresh();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Failed");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="w-full max-w-2xl mx-auto py-8">
+    <div className="w-full max-w-4xl mx-auto py-8">
       <Toaster />
       <Card className="border-border/50 bg-card/30 backdrop-blur-xl">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8 border-b border-border/40">
           <div className="space-y-1.5">
-            <CardTitle className="text-3xl font-extrabold tracking-tight">Create Project</CardTitle>
+            <CardTitle className="text-3xl font-extrabold tracking-tight">
+              {isEdit ? "Edit Project" : "Create Project"}
+            </CardTitle>
             <CardDescription className="text-base">
-              Fill out the details below to showcase your amazing work.
+              {isEdit
+                ? "Update your project details below."
+                : "Fill out the details below to showcase your amazing work."}
             </CardDescription>
           </div>
           <Button
@@ -119,7 +170,10 @@ export function AddProjectForm() {
           </Button>
         </CardHeader>
         <CardContent className="pt-8 pb-10">
-          <form id="project-form" onSubmit={form.handleSubmit(onSubmit)}>
+          <form id="project-form" onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit(onSubmit)(e);
+          }}>
             <FieldGroup className="gap-10">
               <Controller
                 name="title"
@@ -128,7 +182,12 @@ export function AddProjectForm() {
                   <Field data-invalid={fieldState.invalid}>
                     <div className="flex items-center gap-2 mb-1.5">
                       <Layout className="h-4 w-4 text-primary" />
-                      <FieldLabel htmlFor="title" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Project Title</FieldLabel>
+                      <FieldLabel
+                        htmlFor="title"
+                        className="text-sm font-bold uppercase tracking-wider text-muted-foreground"
+                      >
+                        Project Title
+                      </FieldLabel>
                     </div>
                     <Input
                       {...field}
@@ -138,9 +197,7 @@ export function AddProjectForm() {
                       aria-invalid={fieldState.invalid}
                       autoComplete="off"
                     />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -152,7 +209,12 @@ export function AddProjectForm() {
                   <Field data-invalid={fieldState.invalid}>
                     <div className="flex items-center gap-2 mb-1.5">
                       <FileText className="h-4 w-4 text-primary" />
-                      <FieldLabel htmlFor="description" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Description</FieldLabel>
+                      <FieldLabel
+                        htmlFor="description"
+                        className="text-sm font-bold uppercase tracking-wider text-muted-foreground"
+                      >
+                        Description
+                      </FieldLabel>
                     </div>
                     <InputGroup>
                       <InputGroupTextarea
@@ -172,12 +234,12 @@ export function AddProjectForm() {
                     <FieldDescription className="mt-2 italic text-xs">
                       Explain the technologies used and the problem this project solves.
                     </FieldDescription>
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
+
+              <ImageUpload images={selectedImages} onChange={setSelectedImages} />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <Controller
@@ -187,7 +249,12 @@ export function AddProjectForm() {
                     <Field data-invalid={fieldState.invalid}>
                       <div className="flex items-center gap-2 mb-1.5">
                         <BadgeCheck className="h-4 w-4 text-primary" />
-                        <FieldLabel htmlFor="badge" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Badge Label</FieldLabel>
+                        <FieldLabel
+                          htmlFor="badge"
+                          className="text-sm font-bold uppercase tracking-wider text-muted-foreground"
+                        >
+                          Badge Label
+                        </FieldLabel>
                       </div>
                       <Input
                         {...field}
@@ -196,9 +263,7 @@ export function AddProjectForm() {
                         className="h-11 bg-background/50 border-border/60 focus:bg-background transition-all"
                         aria-invalid={fieldState.invalid}
                       />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -215,7 +280,9 @@ export function AddProjectForm() {
                         className="h-5 w-5 rounded-md"
                       />
                       <div className="flex items-center gap-2 mb-1.5">
-                        <BadgeCheck className={`h-4 w-4 ${field.value ? "text-yellow-500 fill-current" : "text-muted-foreground"}`} />
+                        <BadgeCheck
+                          className={`h-4 w-4 ${field.value ? "text-yellow-500 fill-current" : "text-muted-foreground"}`}
+                        />
                         <FieldLabel
                           htmlFor="featured"
                           className="font-semibold cursor-pointer select-none"
@@ -236,7 +303,12 @@ export function AddProjectForm() {
                     <Field data-invalid={fieldState.invalid}>
                       <div className="flex items-center gap-2 mb-1.5">
                         <ExternalLink className="h-4 w-4 text-primary" />
-                        <FieldLabel htmlFor="liveUrl" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Deployment</FieldLabel>
+                        <FieldLabel
+                          htmlFor="liveUrl"
+                          className="text-sm font-bold uppercase tracking-wider text-muted-foreground"
+                        >
+                          Deployment
+                        </FieldLabel>
                       </div>
                       <Input
                         {...field}
@@ -246,9 +318,7 @@ export function AddProjectForm() {
                         className="h-11 bg-background/50 border-border/60 focus:bg-background transition-all"
                         aria-invalid={fieldState.invalid}
                       />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -260,7 +330,12 @@ export function AddProjectForm() {
                     <Field data-invalid={fieldState.invalid}>
                       <div className="flex items-center gap-2 mb-1.5">
                         <Code2 className="h-4 w-4 text-primary" />
-                        <FieldLabel htmlFor="codeUrl" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Source Code</FieldLabel>
+                        <FieldLabel
+                          htmlFor="codeUrl"
+                          className="text-sm font-bold uppercase tracking-wider text-muted-foreground"
+                        >
+                          Source Code
+                        </FieldLabel>
                       </div>
                       <Input
                         {...field}
@@ -270,9 +345,7 @@ export function AddProjectForm() {
                         className="h-11 bg-background/50 border-border/60 focus:bg-background transition-all"
                         aria-invalid={fieldState.invalid}
                       />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -302,6 +375,8 @@ export function AddProjectForm() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processing...
                 </>
+              ) : isEdit ? (
+                "Update Project"
               ) : (
                 "Publish Project"
               )}
@@ -310,6 +385,5 @@ export function AddProjectForm() {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
-
