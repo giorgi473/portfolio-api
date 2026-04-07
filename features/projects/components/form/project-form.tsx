@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ConvexHttpClient } from "convex/browser";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
@@ -66,6 +66,9 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
     initialData?.images?.map((url) => ({ preview: url, isExisting: true })) || []
   );
 
+  const createProject = useMutation(api.projects.create);
+  const updateProject = useMutation(api.projects.update);
+
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
     defaultValues: initialData || {
@@ -83,10 +86,6 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
     if (loading) return;
     setLoading(true);
     try {
-      const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-      if (!convexUrl) throw new Error("NEXT_PUBLIC_CONVEX_URL is not defined");
-      const convex = new ConvexHttpClient(convexUrl);
-
       const imageUrls: string[] = [];
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -99,7 +98,7 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
 
         if (img.file) {
           if (!cloudName || !uploadPreset || uploadPreset === "your_upload_preset") {
-            throw new Error("Cloudinary config missing");
+            throw new Error("Cloudinary configuration is missing or using default placeholder. Please check your environment variables.");
           }
 
           const formData = new FormData();
@@ -109,7 +108,10 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
             method: "POST",
             body: formData,
           });
-          if (!result.ok) throw new Error("Upload failed");
+          if (!result.ok) {
+            const errorData = await result.json();
+            throw new Error(errorData.error?.message || "Image upload failed");
+          }
           const response = await result.json();
           imageUrls.push(response.secure_url);
         }
@@ -123,14 +125,14 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
       };
 
       if (isEdit && initialData?._id) {
-        await convex.mutation(api.projects.update, {
+        await updateProject({
           id: initialData._id as any,
           ...submissionData,
         });
-        toast.success("Project updated!");
+        toast.success("Project updated successfully!");
       } else {
-        await convex.mutation(api.projects.create, submissionData);
-        toast.success("Project created!");
+        await createProject(submissionData);
+        toast.success("Project created successfully!");
       }
 
       form.reset();
@@ -138,8 +140,8 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
       router.push("/");
       router.refresh();
     } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || "Failed");
+      console.error("Submission error:", error);
+      toast.error(error.message || "Something went wrong. Please check if your environment variables are set correctly in Vercel.");
     } finally {
       setLoading(false);
     }
