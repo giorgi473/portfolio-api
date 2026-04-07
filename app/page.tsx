@@ -13,7 +13,9 @@ export default function HomePage() {
         <MeteorsDemo />
         <section className="py-24 container mx-auto px-4 max-w-6xl">
           <ProjectsHeader />
-          <ProjectList />
+          <Suspense fallback={<ProjectListLoader />}>
+            <ProjectList />
+          </Suspense>
         </section>
       </div>
     </main>
