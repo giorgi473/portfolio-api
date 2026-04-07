@@ -138,7 +138,6 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
       form.reset();
       setSelectedImages([]);
       router.push("/");
-      router.refresh();
     } catch (error: any) {
       console.error("Submission error:", error);
       toast.error(error.message || "Something went wrong. Please check if your environment variables are set correctly in Vercel.");
