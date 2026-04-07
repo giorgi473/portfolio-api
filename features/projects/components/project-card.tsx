@@ -49,7 +49,6 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
     try {
       await removeProject({ id: project._id as any });
       toast.success("Project deleted successfully");
-      router.refresh();
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete project");
