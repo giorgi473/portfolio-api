@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { memo } from "react";
 import { getOptimizedImageUrl } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,7 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
   const optimizedImage = mainImage ? getOptimizedImageUrl(mainImage, 800) : null;
   const removeProject = useMutation(api.projects.remove);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
 
   const handleDelete = async () => {
@@ -58,7 +60,11 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
   };
 
   return (
-    <div className="h-full relative group/card">
+    <div
+      className="h-full relative group/card"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <Card className="flex flex-col h-full group rounded-sm py-0 transition-all duration-500 border-border/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 hover:bg-card overflow-hidden">
         {optimizedImage && isValidUrl ? (
           <div className="relative aspect-video w-full overflow-hidden border-b border-border/40 bg-muted/20">
@@ -78,80 +84,128 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
             )}
 
             {/* Action Buttons Overlay */}
-            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
-              <Link
-                href={`/edit-project/${project._id}`}
-                className="p-2 bg-background/80 backdrop-blur-sm text-foreground rounded-full hover:bg-background transition-colors border border-border/40"
-              >
-                <Edit3 className="h-4 w-4" />
-              </Link>
-              
-              <AlertDialog>
-                <AlertDialogTrigger
-                  disabled={isDeleting}
-                  className="p-2 bg-destructive/80 text-destructive-foreground rounded-full hover:bg-destructive disabled:opacity-50 transition-colors"
-                >
-                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the
-                      project "{project.title}" from the database.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            <div className="absolute top-2 right-2 flex flex-col gap-2">
+              <AnimatePresence>
+                {isHovered && (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.2 }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      Delete Project
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                      <Link
+                        href={`/edit-project/${project._id}`}
+                        className="p-2 bg-background/80 backdrop-blur-sm text-foreground rounded-sm hover:bg-background transition-colors border border-border/40 flex items-center justify-center shadow-sm"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Link>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.2 }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <AlertDialog>
+                        <AlertDialogTrigger
+                          disabled={isDeleting}
+                          className="p-2 bg-destructive/80 cursor-pointer text-destructive-foreground rounded-sm hover:bg-destructive disabled:opacity-50 transition-colors"
+                        >
+                          {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className={"rounded-sm"}>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the
+                              project "{project.title}" from the database.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="rounded-b-sm">
+                            <AlertDialogCancel className={"cursor-pointer rounded-sm"}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDelete}
+                              className="bg-destructive cursor-pointer rounded-sm text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete Project
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         ) : (
           <div className="relative aspect-video w-full bg-muted/50 flex items-center justify-center border-b border-border/40">
             <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
-            
-            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover/card:opacity-100 transition-opacity">
-              <Link
-                href={`/edit-project/${project._id}`}
-                className="p-2 bg-background/80 backdrop-blur-sm text-foreground rounded-full hover:bg-background transition-colors border border-border/40"
-              >
-                <Edit3 className="h-4 w-4" />
-              </Link>
 
-              <AlertDialog>
-                <AlertDialogTrigger
-                  disabled={isDeleting}
-                  className="p-2 bg-destructive/80 text-destructive-foreground rounded-full hover:bg-destructive disabled:opacity-50 transition-colors"
-                >
-                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the
-                      project "{project.title}" from the database.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            <div className="absolute top-2 right-2 flex gap-2">
+              <AnimatePresence>
+                {isHovered && (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.2 }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      Delete Project
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                      <Link
+                        href={`/edit-project/${project._id}`}
+                        className="p-2 bg-background/80 backdrop-blur-sm text-foreground rounded-full hover:bg-background transition-colors border border-border/40 flex items-center justify-center shadow-sm"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Link>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.2 }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <AlertDialog>
+                        <AlertDialogTrigger
+                          disabled={isDeleting}
+                          className="p-2 bg-destructive/80 text-destructive-foreground rounded-full hover:bg-destructive disabled:opacity-50 transition-colors"
+                        >
+                          {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the
+                              project "{project.title}" from the database.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDelete}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete Project
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         )}
@@ -179,12 +233,12 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
             {project.description}
           </CardDescription>
         </CardHeader>
-        <CardFooter className="flex gap-3 pt-6 mt-auto border-t border-border/40 bg-muted/30 group-hover:bg-muted/50 transition-colors rounded-b-xl">
+        <CardFooter className="flex gap-3 pt-6 mt-auto border-t border-border/40 bg-muted/30 rounded-b-sm group-hover:bg-muted/50 transition-colors">
           {project.liveUrl && (
             <Button
               variant="default"
               size="sm"
-              className="flex-1 font-semibold transition-all"
+              className="flex-1 font-semibold transition-all cursor-pointer"
               onClick={() => window.open(project.liveUrl, "_blank", "noopener,noreferrer")}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
@@ -195,7 +249,7 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 bg-background/50 hover:bg-background font-semibold transition-all"
+              className="flex-1 bg-background/50 hover:bg-background cursor-pointer font-semibold transition-all"
               onClick={() => window.open(project.codeUrl, "_blank", "noopener,noreferrer")}
             >
               <Code2 className="h-4 w-4 mr-2" />
