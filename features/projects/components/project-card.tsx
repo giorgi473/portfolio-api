@@ -3,7 +3,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Code2, BadgeCheck, ImageIcon, Trash2, Loader2, Edit3 } from "lucide-react";
+import { ExternalLink, Code2, BadgeCheck, ImageIcon, Trash2, Loader2, Edit3, Star } from "lucide-react";
 import Image from "next/image";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -35,6 +35,7 @@ interface Project {
   codeUrl?: string;
   featured?: boolean;
   images?: string[];
+  rating?: number;
 }
 
 export const ProjectCard = memo(({ project }: { project: Project }) => {
@@ -76,6 +77,27 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               priority={project.featured}
             />
+            {typeof project.rating === "number" && (
+              <div className="absolute top-2 left-2 px-2 py-1 text-[10px] font-bold flex items-center gap-1">
+                <div className="flex items-center">
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const isFull = project.rating! >= i + 1;
+                    const isHalf = project.rating! >= i + 0.5 && !isFull;
+                    return (
+                      <div key={i} className="relative">
+                        <Star className="h-4 w-4 text-zinc-300 fill-none stroke-2" />
+                        {(isFull || isHalf) && (
+                          <div className={`absolute inset-0 overflow-hidden ${isHalf ? "w-[50%]" : "w-full"}`}>
+                            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <span className="ml-1 tabular-nums">{project.rating!.toFixed(1)}</span>
+              </div>
+            )}
             {project.images && project.images.length > 1 && (
               <div className="absolute bottom-2 right-2 px-2 py-1 bg-background/80 backdrop-blur-sm rounded-md text-[10px] font-bold border border-border/40 flex items-center gap-1">
                 <ImageIcon className="h-3 w-3" />
@@ -147,6 +169,27 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
         ) : (
           <div className="relative aspect-video w-full bg-muted/50 flex items-center justify-center border-b border-border/40">
             <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+            {typeof project.rating === "number" && (
+              <div className="absolute top-2 left-2 px-2 py-1 bg-background/85 backdrop-blur-sm rounded-md text-[10px] font-bold border border-border/40 flex items-center gap-1">
+                <div className="flex items-center">
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const isFull = project.rating! >= i + 1;
+                    const isHalf = project.rating! >= i + 0.5 && !isFull;
+                    return (
+                      <div key={i} className="relative">
+                        <Star className="h-4 w-4 text-zinc-300 fill-none stroke-2" />
+                        {(isFull || isHalf) && (
+                          <div className={`absolute inset-0 overflow-hidden ${isHalf ? "w-[50%]" : "w-full"}`}>
+                            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <span className="ml-1 tabular-nums">{project.rating!.toFixed(1)}</span>
+              </div>
+            )}
 
             <div className="absolute top-2 right-2 flex gap-2">
               <AnimatePresence>

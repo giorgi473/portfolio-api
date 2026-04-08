@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { toast, Toaster } from "sonner";
 import * as z from "zod";
-import { Loader2, X, Layout, FileText, Code2, BadgeCheck, ExternalLink } from "lucide-react";
+import { Loader2, X, Layout, FileText, Code2, BadgeCheck, ExternalLink, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -33,8 +33,8 @@ import {
   InputGroupText,
   InputGroupTextarea,
 } from "@/components/ui/input-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload, type SelectedImage } from "./image-upload";
+import { RatingInput } from "./rating-input";
 
 const projectSchema = z.object({
   title: z
@@ -48,7 +48,7 @@ const projectSchema = z.object({
   badge: z.string().min(2, "Badge text is required."),
   liveUrl: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
   codeUrl: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
-  featured: z.boolean(),
+  rating: z.number().min(0).max(5).optional(),
   images: z.array(z.string()).optional(),
 });
 
@@ -71,15 +71,22 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
-    defaultValues: initialData || {
-      title: "",
-      description: "",
-      badge: "Live Demo",
-      liveUrl: "",
-      codeUrl: "",
-      featured: false,
-      images: [],
-    },
+    defaultValues: initialData 
+      ? { 
+          ...initialData, 
+          rating: (initialData as any).rating ?? 0,
+          liveUrl: initialData.liveUrl || "",
+          codeUrl: initialData.codeUrl || "",
+        } 
+      : {
+          title: "",
+          description: "",
+          badge: "Live Demo",
+          liveUrl: "",
+          codeUrl: "",
+          rating: 0,
+          images: [],
+        },
   });
 
   const onSubmit = async (data: ProjectFormValues) => {
@@ -123,6 +130,8 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
         codeUrl: data.codeUrl || undefined,
         images: imageUrls.length > 0 ? imageUrls : undefined,
       };
+
+      console.log("Submitting project data:", submissionData);
 
       if (isEdit && initialData?._id) {
         await updateProject({
@@ -269,31 +278,31 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
                   )}
                 />
 
-                <Controller
-                  name="featured"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Field orientation="horizontal" className="pt-8 flex items-center gap-3">
-                      <Checkbox
-                        id="featured"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className="h-5 w-5 rounded-md"
-                      />
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <BadgeCheck
-                          className={`h-4 w-4 ${field.value ? "text-yellow-500 fill-current" : "text-muted-foreground"}`}
-                        />
-                        <FieldLabel
-                          htmlFor="featured"
-                          className="font-semibold cursor-pointer select-none"
-                        >
-                          Mark as Featured
-                        </FieldLabel>
+                <div className="flex flex-col gap-6 pt-2">
+                  <Controller
+                    name="rating"
+                    control={form.control}
+                    render={({ field }) => (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 mb-2.5">
+                          <Star className="h-4 w-4 text-primary fill-primary/20" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            Project Rating
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <RatingInput
+                            value={field.value || 0}
+                            onChange={field.onChange}
+                          />
+                          <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold tabular-nums">
+                            {field.value?.toFixed(1) || "0.0"}
+                          </div>
+                        </div>
                       </div>
-                    </Field>
-                  )}
-                />
+                    )}
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

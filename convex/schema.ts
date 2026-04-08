@@ -9,6 +9,7 @@ export default defineSchema({
     liveUrl: v.optional(v.string()),
     codeUrl: v.optional(v.string()),
     featured: v.optional(v.boolean()),
+    rating: v.optional(v.number()),
     images: v.optional(v.array(v.string())),
   })
     .index("by_title", ["title"])
