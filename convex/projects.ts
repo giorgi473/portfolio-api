@@ -7,8 +7,8 @@ export const list = query({
   },
   handler: async (ctx, args) => {
     let q = ctx.db.query("projects").withIndex("by_featured");
-    const projects = args.limit 
-      ? await q.order("desc").take(args.limit) 
+    const projects = args.limit
+      ? await q.order("desc").take(args.limit)
       : await q.order("desc").collect();
 
     return await Promise.all(
@@ -23,14 +23,14 @@ export const list = query({
             } catch (e) {
               return null;
             }
-          })
+          }),
         );
 
         return {
           ...project,
           images: imageUrls.filter((url): url is string => url !== null),
         };
-      })
+      }),
     );
   },
 });
@@ -51,7 +51,7 @@ export const getById = query({
         } catch (e) {
           return null;
         }
-      })
+      }),
     );
 
     return {

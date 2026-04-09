@@ -17,7 +17,11 @@ interface ImageUploadProps {
   maxImages?: number;
 }
 
-export function ImageUpload({ images, onChange, maxImages = 5 }: ImageUploadProps) {
+export function ImageUpload({
+  images,
+  onChange,
+  maxImages = 5,
+}: ImageUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,11 +43,11 @@ export function ImageUpload({ images, onChange, maxImages = 5 }: ImageUploadProp
   const removeImage = (index: number) => {
     const newImages = [...images];
     const removed = newImages.splice(index, 1)[0];
-    
+
     if (!removed.isExisting && removed.preview) {
       URL.revokeObjectURL(removed.preview);
     }
-    
+
     onChange(newImages);
   };
 
@@ -55,7 +59,6 @@ export function ImageUpload({ images, onChange, maxImages = 5 }: ImageUploadProp
           Project Images (Up to {maxImages})
         </span>
       </div>
-
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {images.map((img, index) => (
           <div
@@ -77,28 +80,25 @@ export function ImageUpload({ images, onChange, maxImages = 5 }: ImageUploadProp
             </button>
           </div>
         ))}
-
         {images.length < maxImages && (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="aspect-square rounded-xl border-2 border-dashed border-border/40 hover:border-primary/40 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary"
+            className="aspect-square rounded-xl border-2 cursor-pointer border-dashed border-border/40 hover:border-primary/40 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary"
           >
             <Plus className="h-6 w-6" />
             <span className="text-xs font-medium">Add Image</span>
           </button>
         )}
       </div>
-
       <input
         type="file"
         ref={fileInputRef}
         onChange={handleImageChange}
         accept="image/*"
         multiple
-        className="hidden"
+        className="hidden cursor-pointer"
       />
-
       <p className="text-xs text-muted-foreground italic">
         Showcase your project with up to {maxImages} high-quality screenshots.
       </p>

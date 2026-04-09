@@ -38,9 +38,9 @@ http.route({
     try {
       const url = new URL(request.url);
       const limit = url.searchParams.get("limit");
-      
-      const projects = await ctx.runQuery(api.projects.list, { 
-        limit: limit ? parseInt(limit) : undefined 
+
+      const projects = await ctx.runQuery(api.projects.list, {
+        limit: limit ? parseInt(limit) : undefined,
       });
       return jsonResponse(projects);
     } catch (error) {
@@ -55,7 +55,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      
+
       if (body.action === "seed") {
         const result = await ctx.runMutation(api.projects.seedProjects);
         return jsonResponse(result, 201);
@@ -63,7 +63,10 @@ http.route({
       const id = await ctx.runMutation(api.projects.create, body);
       return jsonResponse({ id }, 201);
     } catch (error) {
-      return jsonResponse({ error: "Invalid request body or server error" }, 400);
+      return jsonResponse(
+        { error: "Invalid request body or server error" },
+        400,
+      );
     }
   }),
 });
@@ -75,11 +78,11 @@ http.route({
     try {
       const id = request.url.split("/").pop();
       if (!id) return jsonResponse({ error: "ID required" }, 400);
-      
+
       const body = await request.json();
-      await ctx.runMutation(api.projects.update, { 
+      await ctx.runMutation(api.projects.update, {
         id: id as any,
-        ...body 
+        ...body,
       });
       return jsonResponse({ success: true });
     } catch (error) {
@@ -95,7 +98,7 @@ http.route({
     try {
       const id = request.url.split("/").pop();
       if (!id) return jsonResponse({ error: "ID required" }, 400);
-      
+
       await ctx.runMutation(api.projects.remove, { id: id as any });
       return jsonResponse({ success: true });
     } catch (error) {
@@ -110,11 +113,14 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const id = request.url.split("/").pop();
-      if (!id || id === "projects") return jsonResponse({ error: "ID required" }, 400);
-      
-      const project = await ctx.runQuery(api.projects.getById, { id: id as any });
+      if (!id || id === "projects")
+        return jsonResponse({ error: "ID required" }, 400);
+
+      const project = await ctx.runQuery(api.projects.getById, {
+        id: id as any,
+      });
       if (!project) return jsonResponse({ error: "Project not found" }, 404);
-      
+
       return jsonResponse(project);
     } catch (error) {
       return jsonResponse({ error: "Failed to fetch project" }, 500);

@@ -1,8 +1,8 @@
-import Link from "next/link"
+import Link from "next/link";
 import { ProjectForm } from "@/features/projects/components/form/project-form";
-import { buttonVariants } from "@/components/ui/button-variants"
-import { ChevronLeft } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button-variants";
+import { ChevronLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function AddProjectPage() {
   return (
@@ -13,7 +13,7 @@ export default function AddProjectPage() {
             href="/"
             className={cn(
               buttonVariants({ variant: "ghost" }),
-              "-ml-4 text-muted-foreground hover:text-foreground font-bold uppercase tracking-widest text-xs group transition-all"
+              "-ml-4 text-muted-foreground hover:text-foreground font-bold uppercase tracking-widest text-xs group transition-all",
             )}
           >
             <ChevronLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
@@ -21,7 +21,9 @@ export default function AddProjectPage() {
           </Link>
           <div className="flex items-center gap-2">
             <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">New Submission</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+              New Submission
+            </span>
           </div>
         </div>
         <ProjectForm />

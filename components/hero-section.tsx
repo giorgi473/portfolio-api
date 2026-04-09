@@ -9,11 +9,13 @@ export function HeroSection() {
       <div className="container mx-auto px-4 max-w-6xl relative">
         <div className="flex flex-col items-center text-center space-y-8">
           <div>
-            <Badge variant="outline" className="px-4 py-1.5 border-primary/20 bg-primary/5 text-primary text-xs font-bold uppercase tracking-widest">
+            <Badge
+              variant="outline"
+              className="px-4 py-1.5 border-primary/20 bg-primary/5 text-primary text-xs font-bold uppercase tracking-widest"
+            >
               Full-Stack Developer Portfolio
             </Badge>
           </div>
-
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9]">
             Crafting Digital <br />
             <span className="text-transparent bg-clip-text bg-linear-to-r from-primary via-blue-500 to-purple-600">

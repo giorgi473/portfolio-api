@@ -1,16 +1,16 @@
 import BackgroundBeamsWithCollisionDemo from "@/components/ui/beams-collision";
 
 function layout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    return (
-        <div>
-            <BackgroundBeamsWithCollisionDemo />
-            {children}
-        </div>
-    )
+  return (
+    <div>
+      <BackgroundBeamsWithCollisionDemo />
+      {children}
+    </div>
+  );
 }
 
 export default layout;

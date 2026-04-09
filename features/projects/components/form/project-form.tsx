@@ -9,7 +9,6 @@ import { toast, Toaster } from "sonner";
 import * as z from "zod";
 import { Loader2, X, Layout, FileText, Code2, BadgeCheck, ExternalLink, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -71,22 +70,22 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
-    defaultValues: initialData 
-      ? { 
-          ...initialData, 
-          rating: (initialData as any).rating ?? 0,
-          liveUrl: initialData.liveUrl || "",
-          codeUrl: initialData.codeUrl || "",
-        } 
+    defaultValues: initialData
+      ? {
+        ...initialData,
+        rating: (initialData as any).rating ?? 0,
+        liveUrl: initialData.liveUrl || "",
+        codeUrl: initialData.codeUrl || "",
+      }
       : {
-          title: "",
-          description: "",
-          badge: "Live Demo",
-          liveUrl: "",
-          codeUrl: "",
-          rating: 0,
-          images: [],
-        },
+        title: "",
+        description: "",
+        badge: "Live Demo",
+        liveUrl: "",
+        codeUrl: "",
+        rating: 0,
+        images: [],
+      },
   });
 
   const onSubmit = async (data: ProjectFormValues) => {
@@ -158,7 +157,7 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
   return (
     <div className="w-full max-w-4xl mx-auto py-8">
       <Toaster />
-      <Card className="border-border/50 bg-card/30 backdrop-blur-xl">
+      <Card className="border-border/50 bg-card/30 backdrop-blur-xl rounded-lg">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-8 border-b border-border/40">
           <div className="space-y-1.5">
             <CardTitle className="text-3xl font-extrabold tracking-tight">
@@ -174,7 +173,7 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
             variant="ghost"
             size="icon"
             onClick={() => router.push("/")}
-            className="rounded-full hover:bg-muted/50"
+            className="rounded-sm hover:bg-muted/50 cursor-pointer"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -370,7 +369,7 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
               variant="outline"
               onClick={() => form.reset()}
               disabled={loading}
-              className="h-11 px-6 font-bold uppercase tracking-widest text-xs"
+              className="h-11 px-6 font-bold uppercase rounded-sm cursor-pointer tracking-widest text-xs"
             >
               Reset Form
             </Button>
@@ -378,7 +377,7 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
               type="submit"
               form="project-form"
               disabled={loading}
-              className="h-11 px-8 font-bold uppercase tracking-widest text-xs"
+              className="h-11 px-8 font-bold uppercase rounded-sm cursor-pointer tracking-widest text-xs"
             >
               {loading ? (
                 <>

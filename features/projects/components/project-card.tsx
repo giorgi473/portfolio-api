@@ -9,7 +9,6 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { memo } from "react";
 import { getOptimizedImageUrl } from "@/lib/utils";
@@ -45,7 +44,6 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
   const removeProject = useMutation(api.projects.remove);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const router = useRouter();
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -104,8 +102,6 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
                 +{project.images.length - 1}
               </div>
             )}
-
-            {/* Action Buttons Overlay */}
             <div className="absolute top-2 right-2 flex flex-col gap-2">
               <AnimatePresence>
                 {isHovered && (
@@ -125,7 +121,6 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
                         <Edit3 className="h-4 w-4" />
                       </Link>
                     </motion.div>
-
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -190,7 +185,6 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
                 <span className="ml-1 tabular-nums">{project.rating!.toFixed(1)}</span>
               </div>
             )}
-
             <div className="absolute top-2 right-2 flex gap-2">
               <AnimatePresence>
                 {isHovered && (
@@ -210,7 +204,6 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
                         <Edit3 className="h-4 w-4" />
                       </Link>
                     </motion.div>
-
                     <motion.div
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -255,7 +248,7 @@ export const ProjectCard = memo(({ project }: { project: Project }) => {
         <CardHeader className="space-y-4">
           <div className="flex justify-between items-start">
             <div className="space-y-1.5">
-              <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2 group-hover:text-primary transition-colors">
+              <CardTitle className="text-xl font-bold tracking-tight flex items-center line-clamp-1 gap-2 group-hover:text-primary transition-colors">
                 {project.title}
                 {project.featured && (
                   <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-yellow-500/20">

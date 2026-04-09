@@ -41,7 +41,7 @@ export default function EditProjectPage() {
             href="/"
             className={cn(
               buttonVariants({ variant: "ghost" }),
-              "-ml-4 text-muted-foreground hover:text-foreground font-bold uppercase tracking-widest text-xs group transition-all"
+              "-ml-4 text-muted-foreground hover:text-foreground font-bold uppercase tracking-widest text-xs group transition-all",
             )}
           >
             <ChevronLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
@@ -49,7 +49,9 @@ export default function EditProjectPage() {
           </Link>
           <div className="flex items-center gap-2">
             <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500">Editing Project</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500">
+              Editing Project
+            </span>
           </div>
         </div>
         <ProjectForm initialData={project as any} isEdit={true} />
