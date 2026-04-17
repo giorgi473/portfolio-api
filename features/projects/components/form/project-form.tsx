@@ -362,7 +362,7 @@ export function ProjectForm({ initialData, isEdit = false }: ProjectFormProps) {
             </FieldGroup>
           </form>
         </CardContent>
-        <CardFooter className="pt-8 pb-8 bg-muted/20 border-t border-border/40">
+        <CardFooter className="pt-8 pb-8 bg-muted/20 border-t border-border/40 rounded-b-sm">
           <div className="flex items-center justify-between w-full">
             <Button
               type="button"
